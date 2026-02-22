@@ -26,9 +26,27 @@ Scope {
   property bool systemStatusMenuOpen: false
   property var trayMenuHandle: null
   property real trayMenuX: 0
+  property real trayMenuY: 0
+  property real trayMenuHitWidth: 460
+  property real trayMenuHitHeight: 440
+  property real notificationMenuX: 0
+  property real notificationMenuY: 0
+  property real volumeMenuX: 0
+  property real volumeMenuY: 0
+  property real wifiMenuX: 0
+  property real wifiMenuY: 0
+  property real bluetoothMenuX: 0
+  property real bluetoothMenuY: 0
+  property real powerMenuX: 0
+  property real powerMenuY: 0
+  property real mediaMenuX: 0
+  property real mediaMenuY: 0
+  property real systemStatusMenuX: 0
+  property real systemStatusMenuY: 0
   property var trayMenuScreen: null
+  property var popupScreen: null
   property int notificationCenterVerticalOffset: -40
-  property bool anyPopupOpen: root.notificationCenterOpen || root.mediaMenuOpen || root.powerMenuOpen || root.volumeMenuOpen || root.wifiMenuOpen || root.bluetoothMenuOpen || root.systemStatusMenuOpen
+  property bool anyPopupOpen: root.notificationCenterOpen || root.mediaMenuOpen || root.powerMenuOpen || root.volumeMenuOpen || root.wifiMenuOpen || root.bluetoothMenuOpen || root.trayMenuOpen || root.systemStatusMenuOpen
 
   function closeAllPopups() {
     root.notificationCenterOpen = false
@@ -39,6 +57,17 @@ Scope {
     root.bluetoothMenuOpen = false
     root.trayMenuOpen = false
     root.systemStatusMenuOpen = false
+  }
+
+  function popupLeft(anchorX, popupWidth, screenWidth) {
+    var minX = Theme.outerGap
+    var maxX = Math.max(minX, screenWidth - Theme.outerGap - popupWidth)
+    var centeredX = Theme.outerGap + anchorX - popupWidth / 2
+    return Math.max(minX, Math.min(maxX, centeredX))
+  }
+
+  function popupTop(anchorY) {
+    return Theme.outerGap + anchorY - 40
   }
 
   function clearNotifications() {
@@ -114,61 +143,75 @@ Scope {
           bluetoothMenuOpen: root.bluetoothMenuOpen
           powerMenuOpen: root.powerMenuOpen
           panelWindow: panel
-          onToggleNotifications: {
-            root.notificationCenterOpen = !root.notificationCenterOpen
-            root.volumeMenuOpen = false
-            root.wifiMenuOpen = false
-            root.bluetoothMenuOpen = false
-            root.powerMenuOpen = false
-            root.systemStatusMenuOpen = false
+          onNotificationMenuRequested: function(x, y) {
+            var w = 360
+            var wasOpen = root.notificationCenterOpen && root.popupScreen === panel.modelData
+            root.closeAllPopups()
+            if (wasOpen) return
+            root.popupScreen = panel.modelData
+            root.notificationMenuX = root.popupLeft(x, w, panel.modelData.width)
+            root.notificationMenuY = root.popupTop(y)
+            root.notificationCenterOpen = true
           }
           onClearNotifications: root.clearNotifications()
-          onToggleVolumeMenu: {
-            root.volumeMenuOpen = !root.volumeMenuOpen
-            root.notificationCenterOpen = false
-            root.wifiMenuOpen = false
-            root.bluetoothMenuOpen = false
-            root.powerMenuOpen = false
-            root.systemStatusMenuOpen = false
+          onVolumeMenuRequested: function(x, y) {
+            var w = 280
+            var wasOpen = root.volumeMenuOpen && root.popupScreen === panel.modelData
+            root.closeAllPopups()
+            if (wasOpen) return
+            root.popupScreen = panel.modelData
+            root.volumeMenuX = root.popupLeft(x, w, panel.modelData.width)
+            root.volumeMenuY = root.popupTop(y)
+            root.volumeMenuOpen = true
           }
           onVolumeStep: function(delta) { root.audio.stepVolume(delta) }
           onToggleMute: root.audio.toggleMute()
-          onToggleWifiMenu: {
-            root.wifiMenuOpen = !root.wifiMenuOpen
-            root.notificationCenterOpen = false
-            root.volumeMenuOpen = false
-            root.bluetoothMenuOpen = false
-            root.powerMenuOpen = false
-            root.systemStatusMenuOpen = false
+          onWifiMenuRequested: function(x, y) {
+            var w = 280
+            var wasOpen = root.wifiMenuOpen && root.popupScreen === panel.modelData
+            root.closeAllPopups()
+            if (wasOpen) return
+            root.popupScreen = panel.modelData
+            root.wifiMenuX = root.popupLeft(x, w, panel.modelData.width)
+            root.wifiMenuY = root.popupTop(y)
+            root.wifiMenuOpen = true
           }
-          onToggleBluetoothMenu: {
-            root.bluetoothMenuOpen = !root.bluetoothMenuOpen
-            root.notificationCenterOpen = false
-            root.volumeMenuOpen = false
-            root.wifiMenuOpen = false
-            root.powerMenuOpen = false
-            root.systemStatusMenuOpen = false
+          onBluetoothMenuRequested: function(x, y) {
+            var w = 280
+            var wasOpen = root.bluetoothMenuOpen && root.popupScreen === panel.modelData
+            root.closeAllPopups()
+            if (wasOpen) return
+            root.popupScreen = panel.modelData
+            root.bluetoothMenuX = root.popupLeft(x, w, panel.modelData.width)
+            root.bluetoothMenuY = root.popupTop(y)
+            root.bluetoothMenuOpen = true
           }
-          onTogglePowerMenu: {
-            root.powerMenuOpen = !root.powerMenuOpen
-            root.notificationCenterOpen = false
-            root.volumeMenuOpen = false
-            root.wifiMenuOpen = false
-            root.bluetoothMenuOpen = false
-            root.trayMenuOpen = false
-            root.systemStatusMenuOpen = false
+          onPowerMenuRequested: function(x, y) {
+            var w = 200
+            var wasOpen = root.powerMenuOpen && root.popupScreen === panel.modelData
+            root.closeAllPopups()
+            if (wasOpen) return
+            root.popupScreen = panel.modelData
+            root.powerMenuX = root.popupLeft(x, w, panel.modelData.width)
+            root.powerMenuY = root.popupTop(y)
+            root.powerMenuOpen = true
           }
           onTrayMenuRequested: function(menu, x, y) {
+            var w = 230
+            var sameMenu = root.trayMenuOpen && root.trayMenuHandle === menu && root.trayMenuScreen === panel.modelData
+            if (sameMenu) {
+              root.trayMenuOpen = false
+              return
+            }
+            root.closeAllPopups()
             root.trayMenuHandle = menu
-            root.trayMenuX = Theme.outerGap + x
+            root.trayMenuX = root.popupLeft(x, w, panel.modelData.width)
+            root.trayMenuY = root.popupTop(y)
+            root.trayMenuHitWidth = 460
+            root.trayMenuHitHeight = 440
             root.trayMenuScreen = panel.modelData
+            root.popupScreen = panel.modelData
             root.trayMenuOpen = true
-            root.notificationCenterOpen = false
-            root.volumeMenuOpen = false
-            root.wifiMenuOpen = false
-            root.bluetoothMenuOpen = false
-            root.powerMenuOpen = false
-            root.systemStatusMenuOpen = false
           }
         }
 
@@ -183,19 +226,25 @@ Scope {
           niri: root.niri
           stats: root.stats
           mediaMenuOpen: root.mediaMenuOpen
-          onToggleMediaMenu: {
-            root.mediaMenuOpen = !root.mediaMenuOpen
-            root.systemStatusMenuOpen = false
+          onToggleMediaMenu: function(x, y) {
+            var w = 420
+            var wasOpen = root.mediaMenuOpen && root.popupScreen === panel.modelData
+            root.closeAllPopups()
+            if (wasOpen) return
+            root.popupScreen = panel.modelData
+            root.mediaMenuX = root.popupLeft(x, w, panel.modelData.width)
+            root.mediaMenuY = root.popupTop(y)
+            root.mediaMenuOpen = true
           }
-          onToggleSystemStatusMenu: {
-            root.systemStatusMenuOpen = !root.systemStatusMenuOpen
-            root.mediaMenuOpen = false
-            root.notificationCenterOpen = false
-            root.volumeMenuOpen = false
-            root.wifiMenuOpen = false
-            root.bluetoothMenuOpen = false
-            root.powerMenuOpen = false
-            root.trayMenuOpen = false
+          onToggleSystemStatusMenu: function(x, y) {
+            var w = 220
+            var wasOpen = root.systemStatusMenuOpen && root.popupScreen === panel.modelData
+            root.closeAllPopups()
+            if (wasOpen) return
+            root.popupScreen = panel.modelData
+            root.systemStatusMenuX = root.popupLeft(x, w, panel.modelData.width)
+            root.systemStatusMenuY = root.popupTop(y)
+            root.systemStatusMenuOpen = true
           }
         }
       }
@@ -224,7 +273,17 @@ Scope {
       MouseArea {
         anchors.fill: parent
         acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
-        onPressed: root.closeAllPopups()
+        onPressed: function(mouse) {
+          if (root.trayMenuOpen && root.trayMenuScreen === modelData) {
+            var insideTray = mouse.x >= root.trayMenuX && mouse.x <= (root.trayMenuX + root.trayMenuHitWidth)
+              && mouse.y >= root.trayMenuY && mouse.y <= (root.trayMenuY + root.trayMenuHitHeight)
+            if (insideTray) {
+              mouse.accepted = false
+              return
+            }
+          }
+          root.closeAllPopups()
+        }
       }
     }
   }
@@ -238,7 +297,7 @@ Scope {
       required property var modelData
       screen: modelData
 
-      visible: root.systemStatusMenuOpen
+      visible: root.systemStatusMenuOpen && root.popupScreen === modelData
       color: "transparent"
       implicitWidth: 220
       implicitHeight: 156
@@ -249,8 +308,8 @@ Scope {
       }
 
       margins {
-        top: Theme.outerGap * 2 + Theme.barHeight - 1 + root.notificationCenterVerticalOffset
-        left: Math.max(Theme.outerGap, (modelData.width - implicitWidth) / 2 - 110)
+        top: root.systemStatusMenuY
+        left: root.systemStatusMenuX
       }
 
       SystemStatusMenu {
@@ -272,8 +331,8 @@ Scope {
 
       visible: root.trayMenuOpen && root.trayMenuScreen === modelData
       color: "transparent"
-      implicitWidth: 230
-      implicitHeight: 260
+      implicitWidth: trayMenuContent.implicitWidth
+      implicitHeight: trayMenuContent.implicitHeight
 
       anchors {
         top: true
@@ -281,14 +340,17 @@ Scope {
       }
 
       margins {
-        top: Theme.outerGap * 2 + Theme.barHeight - 1 + root.notificationCenterVerticalOffset
+        top: root.trayMenuY
         left: root.trayMenuX
       }
 
       ThemedTrayMenu {
+        id: trayMenuContent
         anchors.fill: parent
         open: root.trayMenuOpen
         menu: root.trayMenuHandle
+        onImplicitWidthChanged: root.trayMenuHitWidth = implicitWidth
+        onImplicitHeightChanged: root.trayMenuHitHeight = implicitHeight
         onItemTriggered: root.trayMenuOpen = false
       }
     }
@@ -303,7 +365,7 @@ Scope {
       required property var modelData
       screen: modelData
 
-      visible: root.mediaMenuOpen || mediaPopup.opacity > 0.02
+      visible: (root.mediaMenuOpen || mediaPopup.opacity > 0.02) && root.popupScreen === modelData
       color: "transparent"
       implicitWidth: 420
       implicitHeight: 170
@@ -314,8 +376,8 @@ Scope {
       }
 
       margins {
-        top: Theme.outerGap * 2 + Theme.barHeight - 1 + root.notificationCenterVerticalOffset
-        left: Math.max(Theme.outerGap, (modelData.width - implicitWidth) / 2)
+        top: root.mediaMenuY
+        left: root.mediaMenuX
       }
 
       MediaPopup {
@@ -335,19 +397,19 @@ Scope {
       required property var modelData
       screen: modelData
 
-      visible: root.volumeMenuOpen || volumePopup.opacity > 0.02
+      visible: (root.volumeMenuOpen || volumePopup.opacity > 0.02) && root.popupScreen === modelData
       color: "transparent"
       implicitWidth: 280
       implicitHeight: 240
 
       anchors {
         top: true
-        right: true
+        left: true
       }
 
       margins {
-        top: Theme.outerGap * 2 + Theme.barHeight - 1 + root.notificationCenterVerticalOffset
-        right: Theme.outerGap + 96
+        top: root.volumeMenuY
+        left: root.volumeMenuX
       }
 
       VolumeMenu {
@@ -368,19 +430,19 @@ Scope {
       required property var modelData
       screen: modelData
 
-      visible: root.wifiMenuOpen || wifiPopup.opacity > 0.02
+      visible: (root.wifiMenuOpen || wifiPopup.opacity > 0.02) && root.popupScreen === modelData
       color: "transparent"
       implicitWidth: 280
       implicitHeight: 260
 
       anchors {
         top: true
-        right: true
+        left: true
       }
 
       margins {
-        top: Theme.outerGap * 2 + Theme.barHeight - 1 + root.notificationCenterVerticalOffset
-        right: Theme.outerGap + 136
+        top: root.wifiMenuY
+        left: root.wifiMenuX
       }
 
       WifiMenu {
@@ -401,19 +463,19 @@ Scope {
       required property var modelData
       screen: modelData
 
-      visible: root.bluetoothMenuOpen || bluetoothPopup.opacity > 0.02
+      visible: (root.bluetoothMenuOpen || bluetoothPopup.opacity > 0.02) && root.popupScreen === modelData
       color: "transparent"
       implicitWidth: 280
       implicitHeight: 260
 
       anchors {
         top: true
-        right: true
+        left: true
       }
 
       margins {
-        top: Theme.outerGap * 2 + Theme.barHeight - 1 + root.notificationCenterVerticalOffset
-        right: Theme.outerGap + 176
+        top: root.bluetoothMenuY
+        left: root.bluetoothMenuX
       }
 
       BluetoothMenu {
@@ -433,19 +495,19 @@ Scope {
       required property var modelData
       screen: modelData
 
-      visible: root.powerMenuOpen || powerPopup.opacity > 0.02
+      visible: (root.powerMenuOpen || powerPopup.opacity > 0.02) && root.popupScreen === modelData
       color: "transparent"
       implicitWidth: 200
       implicitHeight: 206
 
       anchors {
         top: true
-        right: true
+        left: true
       }
 
       margins {
-        top: Theme.outerGap * 2 + Theme.barHeight - 1 + root.notificationCenterVerticalOffset
-        right: Theme.outerGap
+        top: root.powerMenuY
+        left: root.powerMenuX
       }
 
       PowerMenu {
@@ -466,19 +528,19 @@ Scope {
       required property var modelData
       screen: modelData
 
-      visible: root.notificationCenterOpen || notificationPopup.opacity > 0.02
+      visible: (root.notificationCenterOpen || notificationPopup.opacity > 0.02) && root.popupScreen === modelData
       color: "transparent"
       implicitWidth: 360
       implicitHeight: 280
 
       anchors {
         top: true
-        right: true
+        left: true
       }
 
       margins {
-        top: Theme.outerGap * 2 + Theme.barHeight - 1 + root.notificationCenterVerticalOffset
-        right: Theme.outerGap
+        top: root.notificationMenuY
+        left: root.notificationMenuX
       }
 
       NotificationCenter {

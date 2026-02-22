@@ -20,13 +20,14 @@ Row {
 
   signal toggleNotifications()
   signal clearNotifications()
+  signal notificationMenuRequested(real x, real y)
   signal trayMenuRequested(var menu, real x, real y)
-  signal toggleVolumeMenu()
+  signal volumeMenuRequested(real x, real y)
   signal volumeStep(int delta)
   signal toggleMute()
-  signal toggleWifiMenu()
-  signal toggleBluetoothMenu()
-  signal togglePowerMenu()
+  signal wifiMenuRequested(real x, real y)
+  signal bluetoothMenuRequested(real x, real y)
+  signal powerMenuRequested(real x, real y)
 
   height: parent.height - 6
   spacing: 8
@@ -38,32 +39,45 @@ Row {
   }
 
   NotificationStrip {
+    id: notificationButton
     height: parent.height
     notifications: root.notifications
     open: root.notificationCenterOpen
-    onToggleRequested: root.toggleNotifications()
+    onToggleRequested: {
+      var p = notificationButton.mapToItem(null, notificationButton.width / 2, notificationButton.height)
+      root.notificationMenuRequested(p.x, p.y)
+    }
     onClearRequested: root.clearNotifications()
   }
 
   VolumeButton {
+    id: volumeButton
     height: parent.height
     volumePercent: root.audio ? root.audio.volumePercent : 0
     muted: root.audio ? root.audio.muted : false
     open: root.volumeMenuOpen
-    onToggleRequested: root.toggleVolumeMenu()
+    onToggleRequested: {
+      var p = volumeButton.mapToItem(null, volumeButton.width / 2, volumeButton.height)
+      root.volumeMenuRequested(p.x, p.y)
+    }
     onWheelStep: function(delta) { root.volumeStep(delta) }
     onMuteToggleRequested: root.toggleMute()
   }
 
   WifiButton {
+    id: wifiButton
     height: parent.height
     enabled: root.wifi ? root.wifi.enabled : false
     connectedSsid: root.wifi ? root.wifi.connectedSsid : ""
     open: root.wifiMenuOpen
-    onToggleRequested: root.toggleWifiMenu()
+    onToggleRequested: {
+      var p = wifiButton.mapToItem(null, wifiButton.width / 2, wifiButton.height)
+      root.wifiMenuRequested(p.x, p.y)
+    }
   }
 
   BluetoothButton {
+    id: bluetoothButton
     height: parent.height
     enabled: Bluetooth.defaultAdapter ? Bluetooth.defaultAdapter.enabled : false
     connectedCount: {
@@ -74,12 +88,19 @@ Row {
       return count
     }
     open: root.bluetoothMenuOpen
-    onToggleRequested: root.toggleBluetoothMenu()
+    onToggleRequested: {
+      var p = bluetoothButton.mapToItem(null, bluetoothButton.width / 2, bluetoothButton.height)
+      root.bluetoothMenuRequested(p.x, p.y)
+    }
   }
 
   PowerButton {
+    id: powerButton
     height: parent.height
     open: root.powerMenuOpen
-    onToggleRequested: root.togglePowerMenu()
+    onToggleRequested: {
+      var p = powerButton.mapToItem(null, powerButton.width / 2, powerButton.height)
+      root.powerMenuRequested(p.x, p.y)
+    }
   }
 }
