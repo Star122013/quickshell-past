@@ -1,55 +1,62 @@
 .pragma library
 
+function popupPanel(popupStyle) {
+  if (popupStyle && popupStyle.panel)
+    return popupStyle.panel;
+  return popupStyle || {};
+}
+
+function submenuConfig(panel, section) {
+  var key = section;
+
+  if (key === "sound")
+    key = "volume";
+
+  if (!panel || !panel.leftSubmenu)
+    return null;
+
+  if (panel.leftSubmenu[key])
+    return panel.leftSubmenu[key];
+
+  return panel.leftSubmenu.volume || null;
+}
+
 function controlHubWidthFor(section, popupStyle) {
-  if (section === "wifi")
-    return popupStyle.controlHubWifiWidth;
-  if (section === "bluetooth")
-    return popupStyle.controlHubBluetoothWidth;
-  if (section === "notifications")
-    return popupStyle.controlHubNotificationsWidth;
-  if (section === "power")
-    return popupStyle.controlHubPowerWidth;
-  return popupStyle.controlHubDefaultWidth;
+  var panel = popupPanel(popupStyle);
+
+  if (panel.controlHub && panel.controlHub.width !== undefined)
+    return panel.controlHub.width;
+
+  return 0;
 }
 
 function controlHubHeightFor(section, popupStyle) {
-  if (section === "wifi")
-    return popupStyle.controlHubWifiHeight;
-  if (section === "bluetooth")
-    return popupStyle.controlHubBluetoothHeight;
-  if (section === "notifications")
-    return popupStyle.controlHubNotificationsHeight;
-  if (section === "power")
-    return popupStyle.controlHubPowerHeight;
-  return popupStyle.controlHubDefaultHeight;
+  var panel = popupPanel(popupStyle);
+
+  if (panel.controlHub && panel.controlHub.height !== undefined)
+    return panel.controlHub.height;
+
+  return 0;
 }
 
 function avatarSubmenuWidthFor(section, popupStyle) {
-  if (section === "wifi")
-    return popupStyle.wifiMenuWidth;
-  if (section === "sound")
-    return popupStyle.volumeMenuWidth;
-  if (section === "bluetooth")
-    return popupStyle.bluetoothMenuWidth;
-  if (section === "notifications")
-    return popupStyle.notificationMenuWidth;
-  if (section === "power")
-    return popupStyle.powerMenuWidth;
-  return popupStyle.volumeMenuWidth;
+  var panel = popupPanel(popupStyle);
+  var submenu = submenuConfig(panel, section);
+
+  if (submenu && submenu.width !== undefined)
+    return submenu.width;
+
+  return 0;
 }
 
 function avatarSubmenuHeightFor(section, popupStyle) {
-  if (section === "wifi")
-    return popupStyle.wifiMenuHeight;
-  if (section === "sound")
-    return popupStyle.volumeMenuHeight;
-  if (section === "bluetooth")
-    return popupStyle.bluetoothMenuHeight;
-  if (section === "notifications")
-    return popupStyle.notificationMenuHeight;
-  if (section === "power")
-    return popupStyle.powerMenuHeight;
-  return popupStyle.volumeMenuHeight;
+  var panel = popupPanel(popupStyle);
+  var submenu = submenuConfig(panel, section);
+
+  if (submenu && submenu.height !== undefined)
+    return submenu.height;
+
+  return 0;
 }
 
 function popupLeft(anchorX, popupWidth, screenWidth, outerGap) {
