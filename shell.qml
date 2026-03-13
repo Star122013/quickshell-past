@@ -30,6 +30,10 @@ Scope {
     id: audio
   }
 
+  BrightnessService {
+    id: brightness
+  }
+
   WifiService {
     id: wifi
   }
@@ -39,6 +43,7 @@ Scope {
     notifications: notifications
     stats: stats
     audio: audio
+    brightness: brightness
     wifi: wifi
   }
 }

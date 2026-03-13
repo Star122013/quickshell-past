@@ -1,82 +1,156 @@
 # Quickshell Past (Niri)
 
-A customized Quickshell configuration for Niri with a themed top bar, system status widgets, tray integration, and popup controls.
+A customized Quickshell configuration for Niri with a full-width top bar, split popup system, themed control surfaces, and a simplified theme pipeline built around Quickshell QML + JS.
 
-## Features
+## Highlights
 
-- Per-screen top bar (`PanelWindow` + `Variants`)
-- Workspace strip with active/occupied styling
-- Center status block:
-  - CPU usage ring
-  - Memory usage ring
-  - Disk usage ring
-  - Click-to-open system status popup
-- Media status + media control popup (MPRIS)
-- Notification indicator + notification center popup
-- Right-side quick controls:
-  - Volume button + output selection menu
-  - Wi-Fi button + network selection menu
-  - Bluetooth button + device selection menu
-  - Power button + confirmation menu (shutdown/reboot/suspend)
-- System tray icons and context menu support
+- Full-width top bar with shaped outer corners
+- Per-screen `PanelWindow` setup via `Variants`
+- Left section with:
+  - profile/avatar trigger
+  - CPU ring
+  - memory ring
+  - active workspace/window info
+- Center section with a compact workspace strip
+- Right section with:
+  - media chip
+  - notification indicator
+  - volume / Wi-Fi / Bluetooth controls
+  - volume pill
+- Popup system for:
+  - profile menu
+  - system status
+  - media
+  - notification center
+  - Wi-Fi
+  - Bluetooth
+  - volume device switching
+  - power actions
+  - tray application menus
+- Notification toast support
+- Theme split into user-editable entrypoints + derived style layers
+- `matugen` template support for generating `modules/Theme/colors.js`
 
-## Structure
+## Project Layout
 
-- `shell.qml` - entry point
-- `modules/Theme/theme.js` - spacing, radius, typography, and colors
-- `modules/Services/`
-  - `NiriService.qml` - workspace state from `niri msg`
-  - `SystemStatsService.qml` - CPU/memory/disk usage sampling
-  - `AudioService.qml` - volume + sink selection via `wpctl`
-  - `WifiService.qml` - Wi-Fi state/list/connect via `nmcli`
+- `shell.qml` — entry point
 - `modules/Bar/`
-  - `Bar.qml` - bar window + popup windows orchestration
-  - `sections/` - left/center/right layout
-  - `widgets/` - tray, notifications, media popup, menus, etc.
+  - `Bar.qml` — global bar state + popup orchestration
+  - `controllers/` — popup / notification coordination logic
+  - `layout/` — screen windows and dismiss layers
+  - `popups/` — popup host windows / toast windows
+  - `sections/` — left / center / right bar sections
+  - `widgets/buttons/` — compact right-side control buttons
+  - `widgets/chrome/` — structural chrome such as outer corners
+  - `widgets/panels/` — actual popup panel components
+  - `widgets/strips/` — workspace / tray / notification strips
+- `modules/Services/`
+  - `NiriService.qml` — workspace / focused window state from `niri msg`
+  - `SystemStatsService.qml` — CPU / memory sampling
+  - `AudioService.qml` — volume + sink/source switching via `wpctl`
+  - `WifiService.qml` — Wi-Fi / ethernet state via `nmcli`
+  - `BrightnessService.qml` — brightness helpers
+- `modules/Theme/`
+  - `userTheme.js` — main user-editable theme entrypoint
+  - `theme.js` — derived global theme helpers
+  - `colors.js` — semantic color tokens
+  - `profileMenuStyle.js` — derived profile menu sizing
+  - `barPopupStyle.js` — derived popup sizing access
+  - `profileMenuConfig.js` — profile content / greeting / image config
+  - `matugen/` — templates and config for color generation
+
+## Theme Editing
+
+If you only want to tweak the shell, start here:
+
+- `modules/Theme/userTheme.js`
+
+That file now contains the main knobs you are expected to edit:
+
+- `typography` — font family and base font size
+- `layout` — `barHeight`, `innerGap`, `uiRadius`, top spacing
+- `bar` — outer-corner curve behavior
+- `profile` — avatar path and profile menu size
+- `profileMenu` — major profile-menu sizing groups
+- `popup` — widths / heights for popup panels
+
+Everything else is mostly derived from those values.
+
+### Most useful knobs
+
+- Global roundness: `modules/Theme/userTheme.js`
+  - `layout.uiRadius`
+- Bar height and spacing: `modules/Theme/userTheme.js`
+  - `layout.barHeight`
+  - `layout.innerGap`
+- Outer-corner curve feel: `modules/Theme/userTheme.js`
+  - `bar.outerCornerControlFactor`
+- Profile avatar image path: `modules/Theme/userTheme.js`
+  - `profile.avatarImagePath`
+- Popup sizes: `modules/Theme/userTheme.js`
+  - `popup.*`
+
+## Colors and Matugen
+
+Color tokens are kept in:
+
+- `modules/Theme/colors.js`
+
+If you want automated color generation, use the included `matugen` template setup:
+
+- Template: `modules/Theme/matugen/colors.template.js`
+- Config: `modules/Theme/matugen/quickshell-colors.toml`
+- Notes: `modules/Theme/matugen/README.md`
+
+Example:
+
+```bash
+matugen image /path/to/wallpaper -m dark -c modules/Theme/matugen/quickshell-colors.toml
+```
+
+That command regenerates `modules/Theme/colors.js` while keeping the rest of the shell structure unchanged.
 
 ## Dependencies
 
+Required:
+
 - `quickshell`
 - `niri`
-- `wpctl` (PipeWire/WirePlumber)
+- `wpctl` (PipeWire / WirePlumber)
 - `nmcli` (NetworkManager)
 
-Optional but recommended:
+Recommended:
 
-- Nerd Font (for icon glyphs)
+- a Nerd Font for icon glyphs
 
 ## Run
 
+From this repo:
+
 ```bash
-quickshell -p ~/.config/quickshell/shell.qml
+quickshell -p ~/quickshell-past/shell.qml
 ```
 
-If this directory is your default quickshell config:
+Or if this repo is installed as your default Quickshell config:
 
 ```bash
 quickshell
 ```
 
-## Behavior Notes
+## Notes
 
-- Tray, media, notifications, system status, and quick-control menus are independent popup windows.
-- Clicking outside popups closes open menus.
-- Tray context menu behavior depends on app-provided DBus menu capabilities.
-- Notification server ownership depends on the active `org.freedesktop.Notifications` provider.
-
-## Customization Tips
-
-- Adjust colors/radii/fonts in `modules/Theme/theme.js`
-- Tune bar size and spacing in:
-  - `modules/Theme/theme.js`
-  - `modules/Bar/sections/*.qml`
-- Adjust popup placement in `modules/Bar/Bar.qml`
+- Popup placement and dismissal are coordinated centrally through the bar controllers.
+- Tray menus depend on what the application exposes through the system tray menu interface.
+- Notification behavior depends on whether this shell owns `org.freedesktop.Notifications`.
+- Offscreen / sandboxed test runs may still fail due to missing Wayland / DBus access even when QML parsing is valid.
 
 ## Troubleshooting
 
-- If notifications do not appear:
-  - Check whether another notification daemon owns `org.freedesktop.Notifications`
-- If audio outputs are empty:
-  - Verify `wpctl status` works in terminal
-- If Wi-Fi list is empty:
-  - Verify `nmcli -t -f ACTIVE,SSID,SIGNAL,SECURITY dev wifi list` works
+- Notifications not showing:
+  - make sure another notification daemon is not already active
+- Audio devices not showing:
+  - check `wpctl status`
+- Wi-Fi results empty:
+  - check `nmcli device wifi list`
+- Niri workspaces missing:
+  - check `niri msg -j workspaces`

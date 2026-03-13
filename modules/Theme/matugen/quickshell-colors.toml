@@ -1,0 +1,8 @@
+# 从仓库根目录运行时可直接使用：
+# matugen image /path/to/wallpaper -m dark -c modules/Theme/matugen/quickshell-colors.toml
+# 或：
+# matugen color '#89b4fa' -m dark -c modules/Theme/matugen/quickshell-colors.toml
+
+[templates.quickshell_colors]
+input_path = './modules/Theme/matugen/colors.template.js'
+output_path = './modules/Theme/colors.js'

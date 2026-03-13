@@ -8,6 +8,39 @@ Scope {
   property int cpuPercent: 0
   property int memPercent: 0
   property int diskPercent: 0
+  property string statsScript: [
+    "read_cpu_sample() {",
+    "  awk '/^cpu / { print $2+$3+$4+$5+$6+$7+$8+$9, $5 }' /proc/stat",
+    "}",
+    "",
+    "set -- $(read_cpu_sample)",
+    "total1=$1",
+    "idle1=$2",
+    "",
+    "sleep 0.15",
+    "",
+    "set -- $(read_cpu_sample)",
+    "total2=$1",
+    "idle2=$2",
+    "",
+    "total_delta=$((total2-total1))",
+    "idle_delta=$((idle2-idle1))",
+    "if [ \"$total_delta\" -le 0 ]; then",
+    "  cpu=0",
+    "else",
+    "  cpu=$(( (100 * (total_delta - idle_delta)) / total_delta ))",
+    "fi",
+    "",
+    "mem=$(awk '/MemTotal:/ { total=$2 } /MemAvailable:/ { available=$2 } END {",
+    "  if (total > 0) printf(\"%d\", (100 * (total - available)) / total)",
+    "  else printf(\"0\")",
+    "}' /proc/meminfo)",
+    "",
+    "disk=$(df -P / | awk 'NR == 2 { sub(/%/, \"\", $5); print $5; exit }')",
+    "[ -n \"$disk\" ] || disk=0",
+    "",
+    "printf '%s %s %s\\n' \"$cpu\" \"$mem\" \"$disk\""
+  ].join("\n")
 
   function refresh() {
     statsProc.running = true
@@ -31,11 +64,7 @@ Scope {
 
   Process {
     id: statsProc
-    command: [
-      "sh",
-      "-lc",
-      "read _ u1 n1 s1 i1 w1 irq1 sirq1 st1 g1 gn1 < /proc/stat; t1=$((u1+n1+s1+i1+w1+irq1+sirq1+st1)); sleep 0.15; read _ u2 n2 s2 i2 w2 irq2 sirq2 st2 g2 gn2 < /proc/stat; t2=$((u2+n2+s2+i2+w2+irq2+sirq2+st2)); td=$((t2-t1)); id=$((i2-i1)); if [ $td -le 0 ]; then cpu=0; else cpu=$(( (100*(td-id))/td )); fi; mem=$(awk '/MemTotal:/ {t=$2} /MemAvailable:/ {a=$2} END {if (t>0) printf(\"%d\", (100*(t-a))/t); else printf(\"0\")}' /proc/meminfo); disk=$(df -P / | awk 'NR==2{gsub(/%/,\"\",$5); print $5}'); if [ -z \"$disk\" ]; then disk=0; fi; printf '%s %s %s' \"$cpu\" \"$mem\" \"$disk\""
-    ]
+    command: ["sh", "-lc", root.statsScript]
     running: true
 
     stdout: StdioCollector {
